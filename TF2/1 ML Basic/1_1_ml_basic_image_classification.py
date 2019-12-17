@@ -46,7 +46,7 @@ model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=
 model.fit(train_images, train_labels, epochs=10)
 
 #%% Evaluate
-test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=2)
+test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
 print('\nTest accuracy:', test_acc)
 
 predictions = model.predict(test_images)
@@ -124,6 +124,3 @@ imgs = test_images[1:4]
 preds = model.predict(imgs)
 preds2 = np.argmax(preds, axis=1)
 preds2.shape
-preds3 = class_names[preds2]
-preds3 = [class_names[i] for i in preds2]
-preds3
