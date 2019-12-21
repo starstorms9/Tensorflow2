@@ -4,12 +4,15 @@ from tensorflow import keras
 import tensorflow_datasets as tfds
 tfds.disable_progress_bar()
 
+import tensorflow_docs as tfdocs
+import tensorflow_docs.plots
+import tensorflow_docs.modeling
+
 import numpy as np
 import matplotlib.pyplot as plt
 import os
 
 from itertools import cycle
-
 np.set_printoptions(precision=3, suppress=True)
 
 #%% Get data
@@ -47,7 +50,8 @@ model.fit(train_images,
           train_labels,  
           epochs=10,
           validation_data=(test_images,test_labels),
-          callbacks=[cp_callback])  # Pass callback to training
+          callbacks=[cp_callback, tfdocs.modeling.EpochDots(report_every=10)],
+          verbose=1)  # Pass callback to training
 
 # This may generate warnings related to saving the state of the optimizer.
 # These warnings (and similar warnings throughout this notebook)
@@ -150,7 +154,7 @@ print('Restored model, accuracy: {:5.2f}%'.format(100*acc))
 model = create_model()
 model.fit(train_images, train_labels, epochs=5)
 
-# Save the entire model as a SavedModel.
+#%% Save the entire model as a SavedModel.
 !mkdir -p saved_model
 model.save('saved_model/my_model')
 
@@ -171,5 +175,3 @@ new_model.summary()
 loss, acc = new_model.evaluate(test_images,  test_labels, verbose=2)
 print('Restored model, accuracy: {:5.2f}%'.format(100*acc))
 print(new_model.predict(test_images).shape)
-
-#%% Explore
