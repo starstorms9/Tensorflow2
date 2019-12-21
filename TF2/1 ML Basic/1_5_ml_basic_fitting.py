@@ -2,6 +2,7 @@
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+from tensorflow.keras import regularizers
 import tensorflow_datasets as tfds
 tfds.disable_progress_bar()
 
@@ -37,13 +38,19 @@ def pack_row(*row):
   features = tf.stack(row[1:],1)
   return features, label
 
-#%%
 packed_ds = ds.batch(10000).map(pack_row).unbatch()
 
+#%% Look at records
+samples = list(packed_ds.take(1000))
+samples = np.array([samples[i][0].numpy() for i in range(len(samples))])
+plt.hist(samples.flatten(), bins=101)
+
+#%% Look more at records
 for features,label in packed_ds.batch(1000).take(1):
-  print(features[0])
-  plt.hist(features.numpy().flatten(), bins = 101)
-  
+   plt.hist(features.numpy().flatten(), bins = 101)
+   print(features.numpy().flatten().shape)
+   plt.show()
+
 #%%
 N_VALIDATION = int(1e3)
 N_TRAIN = int(1e4)
@@ -87,10 +94,7 @@ def get_callbacks(name):
 def compile_and_fit(model, name, optimizer=None, max_epochs=10000):
   if optimizer is None:
     optimizer = get_optimizer()
-  model.compile(optimizer=optimizer,
-                loss='binary_crossentropy',
-                metrics=['accuracy', 'binary_crossentropy'])
-
+  model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy', 'binary_crossentropy'])
   model.summary()
 
   history = model.fit(
@@ -104,7 +108,7 @@ def compile_and_fit(model, name, optimizer=None, max_epochs=10000):
 
 #%% Tiny model
 tiny_model = tf.keras.Sequential()
-tiny_model.add(layers.Dense(16, activation='elu', input_shape=(FEATURES,))
+tiny_model.add(layers.Dense(16, activation='elu', input_shape=(FEATURES,)))
 tiny_model.add(layers.Dense(1, activation='sigmoid'))
 
 #%% Train tiny model
@@ -148,10 +152,21 @@ large_model.add(layers.Dense(1, activation='sigmoid'))
 size_histories['large'] = compile_and_fit(large_model, "sizes/large")
 
 #%% Explore model differences
+plotter = tfdocs.plots.HistoryPlotter(metric = 'accuracy', smoothing_std=10)
+plt.figure(figsize=(8, 8))
 plotter.plot(size_histories)
 a = plt.xscale('log')
 plt.xlim([5, max(plt.xlim())])
-plt.ylim([0.5, 0.7])
+# plt.ylim([0.5, 0.7])
+plt.xlabel("Epochs [Log Scale]")
+
+#%% Explore model differences
+plotter = tfdocs.plots.HistoryPlotter(metric = 'binary_crossentropy', smoothing_std=10)
+plt.figure(figsize=(8, 8))
+plotter.plot(size_histories)
+a = plt.xscale('log')
+plt.xlim([5, max(plt.xlim())])
+# plt.ylim([0.5, 0.7])
 plt.xlabel("Epochs [Log Scale]")
 
 #%% View in tensorboard
@@ -170,17 +185,29 @@ regularizer_histories['Tiny'] = size_histories['Tiny']
 #%% Define L2 model
 l2_model = tf.keras.Sequential()
 l2_model.add(layers.Dense(512, activation='elu', kernel_regularizer=regularizers.l2(0.001), input_shape=(FEATURES,)))
-l2_model.add(layers.Dense(512, activation='elu', kernel_regularizer=regularizers.l2(0.001)),
-l2_model.add(layers.Dense(512, activation='elu', kernel_regularizer=regularizers.l2(0.001)),
-l2_model.add(layers.Dense(512, activation='elu', kernel_regularizer=regularizers.l2(0.001)),
+l2_model.add(layers.Dense(512, activation='elu', kernel_regularizer=regularizers.l2(0.001)))
+l2_model.add(layers.Dense(512, activation='elu', kernel_regularizer=regularizers.l2(0.001)))
+l2_model.add(layers.Dense(512, activation='elu', kernel_regularizer=regularizers.l2(0.001)))
 l2_model.add(layers.Dense(1, activation='sigmoid'))
 
 #%% Train L2 model
 regularizer_histories['l2'] = compile_and_fit(l2_model, "regularizers/l2")
 
-#%% Plot L2 model data
+#%% Plot L2 model data (accuracy)
+plotter = tfdocs.plots.HistoryPlotter(metric = 'accuracy', smoothing_std=10)
 plotter.plot(regularizer_histories)
-plt.ylim([0.5, 0.7])
+plt.ylim([0.6, 0.73])
+
+result = l2_model(features)
+regularization_loss = tf.add_n(l2_model.losses)
+
+# Display maximum weights for large model compared to L2 model
+for i in range(len(lmw)) : print("{} {:.3f} {:.3f}".format(i, np.max(lmw[i]), np.max(l2w[i])))
+
+#%% Plot L2 model data (loss)
+plotter = tfdocs.plots.HistoryPlotter(metric = 'binary_crossentropy', smoothing_std=10)
+plotter.plot(regularizer_histories)
+plt.ylim([0.55, 0.7])
 
 result = l2_model(features)
 regularization_loss = tf.add_n(l2_model.losses)
@@ -229,5 +256,3 @@ display.IFrame(
     src="https://tensorboard.dev/experiment/fGInKDo8TXes1z7HQku9mw/#scalars&_smoothingWeight=0.97",
     width = "100%",
     height="800px")
-
-#%% Explore
