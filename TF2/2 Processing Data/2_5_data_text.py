@@ -28,10 +28,10 @@ for i, file_name in enumerate(FILE_NAMES):
 ld = labeled_data_sets[0]
 exs = []
 
-for ex, lab in ld.take(5):
-    exs.append(((ex).numpy(), lab))
+for ex, lab in ld.shuffle(3).take(5):
+    exs.append(((ex).numpy(), lab.numpy()))
 
-
+for elem in ld.shuffle(10000).take(5): print(elem)
   
 #%%
 BUFFER_SIZE = 50000
