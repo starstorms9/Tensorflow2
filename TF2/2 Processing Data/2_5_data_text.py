@@ -1,6 +1,7 @@
 #%% Imports
 import tensorflow as tf
 import tensorflow_datasets as tfds
+import numpy as np
 import os
 
 #%% Get data
@@ -11,11 +12,10 @@ for name in FILE_NAMES:
   text_dir = tf.keras.utils.get_file(name, origin=DIRECTORY_URL+name)
   
 parent_dir = os.path.dirname(text_dir)
-parent_dir
 
 #%% Load text to datasets
 def labeler(example, index):
-  return example, tf.cast(index, tf.int64)  
+  return example, tf.cast(index, tf.int64)
 
 labeled_data_sets = []
 
@@ -23,6 +23,15 @@ for i, file_name in enumerate(FILE_NAMES):
   lines_dataset = tf.data.TextLineDataset(os.path.join(parent_dir, file_name))
   labeled_dataset = lines_dataset.map(lambda ex: labeler(ex, i))
   labeled_data_sets.append(labeled_dataset)
+  
+#%% Explore dataset
+ld = labeled_data_sets[0]
+exs = []
+
+for ex, lab in ld.take(5):
+    exs.append(((ex).numpy(), lab))
+
+
   
 #%%
 BUFFER_SIZE = 50000
