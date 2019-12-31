@@ -43,7 +43,7 @@ model.add(keras.layers.Dense(10, activation='softmax'))
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
 #%% Train Model
-model.fit(train_images, train_labels, epochs=10)
+model.fit(train_images, train_labels, epochs=4)
 
 #%% Evaluate
 test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
