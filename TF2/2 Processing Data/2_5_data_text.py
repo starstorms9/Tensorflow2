@@ -4,6 +4,8 @@ import tensorflow_datasets as tfds
 import numpy as np
 import os
 
+import matplotlib.pyplot as plt
+
 #%% Get data
 DIRECTORY_URL = 'https://storage.googleapis.com/download.tensorflow.org/data/illiad/'
 FILE_NAMES = ['cowper.txt', 'derby.txt', 'butler.txt']
@@ -25,13 +27,14 @@ for i, file_name in enumerate(FILE_NAMES):
   labeled_data_sets.append(labeled_dataset)
   
 #%% Explore dataset
-ld = labeled_data_sets[0]
-exs = []
+lengths = [19143, 18334, 12131]
+ld = tf.data.Dataset.concatenate(labeled_data_sets[1].take(100), labeled_data_sets[0].take(100))
 
-for ex, lab in ld.shuffle(3).take(5):
+exs = []
+for ex, lab in ld.skip(0).shuffle(50000).take(5):
     exs.append(((ex).numpy(), lab.numpy()))
 
-for elem in ld.shuffle(10000).take(5): print(elem)
+for elem in exs: print(elem, '\n')
   
 #%%
 BUFFER_SIZE = 50000
@@ -85,11 +88,11 @@ train_data = train_data.padded_batch(BATCH_SIZE, padded_shapes=([-1],[]))
 test_data = all_encoded_data.take(TAKE_SIZE)
 test_data = test_data.padded_batch(BATCH_SIZE, padded_shapes=([-1],[]))
 
+vocab_size = 1 + len(vocabulary_set)
+
 #%%
 sample_text, sample_labels = next(iter(test_data))
 sample_text[0], sample_labels[0]
-
-vocab_size += 1
 
 #%% Build model
 model = tf.keras.Sequential()
@@ -107,7 +110,7 @@ model.add(tf.keras.layers.Dense(3, activation='softmax'))
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
 #%% Train model
-model.fit(train_data, epochs=3, validation_data=test_data)
+history = model.fit(train_data, epochs=10, steps_per_epoch=10, validation_data=test_data)
 
 #%% Evaluate
 eval_loss, eval_acc = model.evaluate(test_data)
