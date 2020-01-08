@@ -44,7 +44,7 @@ print(x.device.endswith('GPU:0'))
 #%% Explicit device placement
 def time_matmul(x):
   start = time.time()
-  for loop in range(10):
+  for loop in range(100):
     tf.matmul(x, x)
   result = time.time()-start
   print("10 loops: {:0.2f}ms".format(1000*result))
@@ -68,7 +68,7 @@ if tf.config.experimental.list_physical_devices("GPU"):
 print("On CPU with Numpy:")
 def time_matmul_np(x):
   start = time.time()
-  for loop in range(10):
+  for loop in range(100):
     np.matmul(x, x)
   result = time.time()-start
   print("10 loops: {:0.2f}ms".format(1000*result))
@@ -117,3 +117,5 @@ for x in ds_tensors:
 print('\nElements in ds_file:')
 for x in ds_file:
   print(x)
+  
+  
